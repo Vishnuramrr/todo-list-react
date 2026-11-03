@@ -15,7 +15,8 @@ const initialTasks = [
 function App() {
   const [tasks, setTasks] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('react-todo-tasks')) || initialTasks
+      const savedTasks = localStorage.getItem('react-todo-tasks')
+      return savedTasks ? JSON.parse(savedTasks) : initialTasks
     } catch {
       return initialTasks
     }
@@ -63,27 +64,34 @@ function App() {
   function toggleTask(id) {
     setTasks((current) =>
       current.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
+        task.id === id
+          ? { ...task, completed: !task.completed }
+          : task
       )
     )
   }
 
   function deleteTask(id) {
-    setTasks((current) => current.filter((task) => task.id !== id))
+    setTasks((current) =>
+      current.filter((task) => task.id !== id)
+    )
   }
 
   function editTask(task) {
     const title = window.prompt('Edit task name:', task.title)
+
     if (title === null || !title.trim()) return
 
     const newPriority = window.prompt(
       'Priority: High, Medium, or Low',
       task.priority
     )
+
     if (newPriority === null) return
 
     const validPriority = ['High', 'Medium', 'Low'].find(
-      (value) => value.toLowerCase() === newPriority.trim().toLowerCase()
+      (value) =>
+        value.toLowerCase() === newPriority.trim().toLowerCase()
     )
 
     if (!validPriority) {
@@ -95,6 +103,7 @@ function App() {
       'Deadline (YYYY-MM-DD), or leave blank:',
       task.deadline
     )
+
     if (newDeadline === null) return
 
     setTasks((current) =>
@@ -111,8 +120,12 @@ function App() {
     )
   }
 
-  const completedCount = tasks.filter((task) => task.completed).length
+  const completedCount = tasks.filter(
+    (task) => task.completed
+  ).length
+
   const pendingCount = tasks.length - completedCount
+
   const progress = tasks.length
     ? Math.round((completedCount / tasks.length) * 100)
     : 0
@@ -135,13 +148,16 @@ function App() {
       <div className="todo-card">
         <header className="header">
           <div>
-            <h1>My To-Do List 📝</h1>
-            <p className="subtitle">Plan your day. Complete your goals.</p>
+            <h1>My Daily Task Manager 📝</h1>
+            <p className="subtitle">
+              Plan your day. Complete your goals.
+            </p>
           </div>
 
           <button
             className="theme-button"
             onClick={() => setDarkMode((value) => !value)}
+            type="button"
           >
             {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
           </button>
@@ -182,10 +198,12 @@ function App() {
             <strong>{tasks.length}</strong>
             <span>Total</span>
           </div>
+
           <div className="stat">
             <strong>{pendingCount}</strong>
             <span>Pending</span>
           </div>
+
           <div className="stat">
             <strong>{completedCount}</strong>
             <span>Completed</span>
@@ -197,9 +215,11 @@ function App() {
             <span>Overall Progress</span>
             <strong>{progress}%</strong>
           </div>
+
           <div
             className="progress-track"
             role="progressbar"
+            aria-label="Overall task completion"
             aria-valuenow={progress}
             aria-valuemin={0}
             aria-valuemax={100}
@@ -234,7 +254,9 @@ function App() {
 
         <section className="task-list">
           {visibleTasks.length === 0 ? (
-            <p className="empty-message">No tasks found. Add a new task!</p>
+            <p className="empty-message">
+              No tasks found. Add a new task!
+            </p>
           ) : (
             visibleTasks.map((task) => (
               <article className="task-row" key={task.id}>
@@ -250,21 +272,31 @@ function App() {
                 <div className="task-details">
                   <span
                     className={
-                      task.completed ? 'task-title completed' : 'task-title'
+                      task.completed
+                        ? 'task-title completed'
+                        : 'task-title'
                     }
                   >
                     {task.title}
                   </span>
 
                   <div className="task-meta">
-                    <span className={`priority ${task.priority.toLowerCase()}`}>
+                    <span
+                      className={`priority ${task.priority.toLowerCase()}`}
+                    >
                       {task.priority} priority
                     </span>
+
                     {task.deadline && (
-                      <span className="deadline">📅 {task.deadline}</span>
+                      <span className="deadline">
+                        📅 {task.deadline}
+                      </span>
                     )}
+
                     {task.completed && (
-                      <span className="done-label">✓ Completed</span>
+                      <span className="done-label">
+                        ✓ Completed
+                      </span>
                     )}
                   </div>
                 </div>
@@ -277,6 +309,7 @@ function App() {
                   >
                     Edit
                   </button>
+
                   <button
                     className="delete-button"
                     onClick={() => deleteTask(task.id)}
@@ -292,10 +325,13 @@ function App() {
 
         <footer className="footer">
           <span>{pendingCount} task(s) remaining</span>
+
           <button
             className="clear-button"
             onClick={() =>
-              setTasks((current) => current.filter((task) => !task.completed))
+              setTasks((current) =>
+                current.filter((task) => !task.completed)
+              )
             }
             type="button"
           >
