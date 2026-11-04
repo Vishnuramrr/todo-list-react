@@ -1,6 +1,7 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react'
+
 import { supabase } from './lib/supabase'
+
 import {
   getLocalTasks,
   saveLocalTask,
@@ -9,6 +10,7 @@ import {
   getSyncQueue,
   removeFromSyncQueue,
 } from './lib/db'
+
 import './App.css'
 
 const isLocalTask = (id) =>
@@ -211,8 +213,7 @@ function App() {
       setSyncing(false)
     }
   }, [user])
-
-  // --------------------------------------------------
+    // --------------------------------------------------
   // Load local tasks and cloud tasks
   // --------------------------------------------------
 
@@ -237,6 +238,7 @@ function App() {
 
         if (!navigator.onLine) {
           setTasks(localTasks)
+
           const queue = await getSyncQueue(user.id)
           setPendingSyncCount(queue.length)
           setTasksLoading(false)
@@ -255,6 +257,7 @@ function App() {
         if (error) {
           // If the cloud request fails, continue with local data.
           setTasks(localTasks)
+
           setTaskError(
             `Could not connect to cloud. Showing local tasks: ${error.message}`
           )
@@ -276,6 +279,7 @@ function App() {
               String(operation.task_id),
               operation.task
             )
+
             pendingDeletes.delete(String(operation.task_id))
           }
 
@@ -360,11 +364,13 @@ function App() {
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
+
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
+
       document.removeEventListener(
         'visibilitychange',
         handleVisibility
@@ -427,6 +433,7 @@ function App() {
 
   async function handleAuth(e) {
     e.preventDefault()
+
     setAuthMessage('')
     setAuthError('')
 
@@ -481,6 +488,7 @@ function App() {
 
   async function handleForgotPassword(e) {
     e.preventDefault()
+
     setAuthMessage('')
     setAuthError('')
 
@@ -519,6 +527,7 @@ function App() {
 
   async function handleResetPassword(e) {
     e.preventDefault()
+
     setAuthMessage('')
     setAuthError('')
 
@@ -541,6 +550,7 @@ function App() {
       setNewPassword('')
       setPassword('')
       setAuthMode('login')
+
       setAuthMessage(
         'Password updated successfully! Please login with your new password.'
       )
@@ -564,8 +574,7 @@ function App() {
       setAuthError(error.message)
     }
   }
-
-  // --------------------------------------------------
+    // --------------------------------------------------
   // Add task - works online and offline
   // --------------------------------------------------
 
@@ -632,7 +641,9 @@ function App() {
       await queueTaskUpsert(updatedTask)
 
       setTasks((current) =>
-        current.map((item) => (item.id === id ? updatedTask : item))
+        current.map((item) =>
+          item.id === id ? updatedTask : item
+        )
       )
 
       if (navigator.onLine) {
@@ -1024,239 +1035,332 @@ function App() {
   }
 
   // --------------------------------------------------
-  // Main To-Do application
+  // Main Dashboard
   // --------------------------------------------------
 
   return (
     <main className={darkMode ? 'app dark' : 'app'}>
-      <div className="todo-card">
-        <header className="header">
-          <div>
-            <h1>My Daily Task Manager 📝</h1>
+      <div className="dashboard-shell">
 
-            <p className="subtitle">
-              Plan your day. Complete your goals.
-            </p>
+        {/* Sidebar - branding only */}
 
-            <p className="user-email">
-              Logged in as: {user.email}
-            </p>
+        <aside className="sidebar">
+          <a className="brand" href="#dashboard">
+            <span className="brand-mark">✓</span>
 
-            <p className="user-email">
-              {isOnline ? '🟢 Online' : '🔴 Offline'}
-              {' · '}
-              {syncing
-                ? 'Syncing...'
-                : pendingSyncCount > 0
-                  ? `${pendingSyncCount} change(s) waiting to sync`
-                  : 'All changes synced'}
-            </p>
-          </div>
+            <span>
+              My Daily
+              <br />
+              Task Manager
+            </span>
+          </a>
+        </aside>
 
-          <div className="header-actions">
-            <button
-              className="theme-button"
-              onClick={() => setDarkMode((value) => !value)}
-              type="button"
-            >
-              {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-            </button>
+        {/* Main content */}
 
-            <button
-              className="logout-button"
-              onClick={handleLogout}
-              type="button"
-            >
-              Logout
-            </button>
-          </div>
-        </header>
+        <div className="dashboard-main">
 
-        <form className="task-form" onSubmit={addTask}>
-          <input
-            aria-label="Task name"
-            placeholder="Enter a new task..."
-            value={taskInput}
-            onChange={(e) => setTaskInput(e.target.value)}
-          />
+          {/* Header */}
 
-          <select
-            aria-label="Priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-          >
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
+          <header className="dashboard-header">
+            <div className="header-info">
+              <p className="welcome-text">YOUR WORKSPACE</p>
 
-          <input
-            aria-label="Deadline"
-            type="date"
-            value={deadline}
-            onChange={(e) => setDeadline(e.target.value)}
-          />
+              <h1>My Daily Task Manager</h1>
 
-          <button
-            className="add-button"
-            type="submit"
-            disabled={taskSubmitting}
-          >
-            {taskSubmitting ? 'Saving...' : 'Add Task'}
-          </button>
-        </form>
+              <p className="subtitle">
+                Plan your day. Complete your goals.
+              </p>
 
-        {taskError && (
-          <p className="auth-error">{taskError}</p>
-        )}
+              <p className="user-email">
+                Logged in as: {user.email}
+              </p>
 
-        <section className="stats">
-          <div className="stat">
-            <strong>{tasks.length}</strong>
-            <span>Total</span>
-          </div>
+              <div
+                className={`header-status ${
+                  isOnline ? 'is-online' : 'is-offline'
+                }`}
+              >
+                <span className="status-dot" />
 
-          <div className="stat">
-            <strong>{pendingCount}</strong>
-            <span>Pending</span>
-          </div>
+                <span>
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
 
-          <div className="stat">
-            <strong>{completedCount}</strong>
-            <span>Completed</span>
-          </div>
-        </section>
+                <span className="header-sync-copy">
+                  {syncing
+                    ? '· Syncing...'
+                    : pendingSyncCount > 0
+                      ? `· ${pendingSyncCount} changes waiting`
+                      : '· All changes synced'}
+                </span>
+              </div>
+            </div>
 
-        <section className="progress-section">
-          <div className="progress-label">
-            <span>Overall Progress</span>
-            <strong>{progress}%</strong>
-          </div>
+            <div className="header-actions">
+              <button
+                className="theme-button"
+                onClick={() => setDarkMode((value) => !value)}
+                type="button"
+              >
+                {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+              </button>
 
-          <div
-            className="progress-track"
-            role="progressbar"
-            aria-label="Overall task completion"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="progress-fill"
-              style={{ width: `${progress}%` }}
+              <button
+                className="logout-button"
+                onClick={handleLogout}
+                type="button"
+              >
+                Logout
+              </button>
+            </div>
+          </header>
+
+          {/* Add Task */}
+
+          <form className="task-form panel" onSubmit={addTask}>
+            <input
+              aria-label="Task name"
+              placeholder="What needs to be done?"
+              value={taskInput}
+              onChange={(e) => setTaskInput(e.target.value)}
+              required
             />
-          </div>
-        </section>
 
-        <input
-          className="search-input"
-          placeholder="🔎 Search tasks..."
-          aria-label="Search tasks"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <nav className="filters" aria-label="Task filters">
-          {['All', 'Pending', 'Completed'].map((item) => (
-            <button
-              key={item}
-              className={
-                filter === item ? 'filter active' : 'filter'
-              }
-              onClick={() => setFilter(item)}
-              type="button"
+            <select
+              aria-label="Priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
             >
-              {item}
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+
+            <input
+              aria-label="Deadline"
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+            />
+
+            <button
+              className="add-button"
+              type="submit"
+              disabled={taskSubmitting}
+            >
+              {taskSubmitting ? 'Saving...' : '+ Add Task'}
             </button>
-          ))}
-        </nav>
+          </form>
 
-        <section className="task-list">
-          {tasksLoading ? (
-            <p className="empty-message">
-              Loading your tasks...
-            </p>
-          ) : visibleTasks.length === 0 ? (
-            <p className="empty-message">
-              No tasks found. Add a new task!
-            </p>
-          ) : (
-            visibleTasks.map((task) => (
-              <article className="task-row" key={task.id}>
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  onChange={() => toggleTask(task.id)}
-                  aria-label={`Mark ${task.title} as ${
-                    task.completed ? 'pending' : 'completed'
-                  }`}
-                />
-
-                <div className="task-details">
-                  <span
-                    className={
-                      task.completed
-                        ? 'task-title completed'
-                        : 'task-title'
-                    }
-                  >
-                    {task.title}
-                  </span>
-
-                  <div className="task-meta">
-                    <span
-                      className={`priority ${task.priority.toLowerCase()}`}
-                    >
-                      {task.priority} priority
-                    </span>
-
-                    {task.deadline && (
-                      <span className="deadline">
-                        📅 {task.deadline}
-                      </span>
-                    )}
-
-                    {task.completed && (
-                      <span className="done-label">
-                        ✓ Completed
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="task-actions">
-                  <button
-                    className="edit-button"
-                    onClick={() => editTask(task)}
-                    type="button"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="delete-button"
-                    onClick={() => deleteTask(task.id)}
-                    type="button"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </article>
-            ))
+          {taskError && (
+            <p className="auth-error">{taskError}</p>
           )}
-        </section>
 
-        <footer className="footer">
-          <span>{pendingCount} task(s) remaining</span>
+          {/* Statistics - exactly three cards */}
 
-          <button
-            className="clear-button"
-            onClick={clearCompleted}
-            type="button"
-          >
-            Clear Completed
-          </button>
-        </footer>
+          <section className="stats">
+            <div className="stat">
+              <strong>{tasks.length}</strong>
+              <span>Total Tasks</span>
+            </div>
+
+            <div className="stat stat-pending">
+              <strong>{pendingCount}</strong>
+              <span>Pending</span>
+            </div>
+
+            <div className="stat stat-completed">
+              <strong>{completedCount}</strong>
+              <span>Completed</span>
+            </div>
+          </section>
+
+          {/* Overview */}
+
+          <div className="overview-row">
+
+            {/* Overall Progress - only one */}
+
+            <section className="progress-section panel">
+              <div className="progress-label">
+                <span>Overall Progress</span>
+                <strong>{progress}%</strong>
+              </div>
+
+              <div
+                className="progress-track"
+                role="progressbar"
+                aria-label="Overall task completion"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="progress-fill"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+
+              <p className="progress-description">
+                {completedCount} of {tasks.length} tasks completed
+              </p>
+            </section>
+
+            {/* Today panel */}
+
+            <section className="today-card panel">
+              <span className="today-label">TODAY</span>
+
+              <strong>
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                })}
+              </strong>
+
+              <span>
+                {new Date().toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+            </section>
+          </div>
+
+          {/* Search and filters */}
+
+          <section className="task-section panel">
+            <div className="task-section-header">
+              <div>
+                <h2>My Tasks</h2>
+
+                <p>
+                  Manage and track your daily activities.
+                </p>
+              </div>
+            </div>
+
+            <div className="task-controls">
+              <input
+                className="search-input"
+                placeholder="🔎 Search tasks..."
+                aria-label="Search tasks"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              <nav className="filters" aria-label="Task filters">
+                {['All', 'Pending', 'Completed'].map((item) => (
+                  <button
+                    key={item}
+                    className={
+                      filter === item ? 'filter active' : 'filter'
+                    }
+                    onClick={() => setFilter(item)}
+                    type="button"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Task list */}
+
+            <section className="task-list">
+              {tasksLoading ? (
+                <p className="empty-message">
+                  Loading your tasks...
+                </p>
+              ) : visibleTasks.length === 0 ? (
+                <p className="empty-message">
+                  No tasks found. Add a new task!
+                </p>
+              ) : (
+                visibleTasks.map((task) => (
+                  <article className="task-row" key={task.id}>
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => toggleTask(task.id)}
+                      aria-label={`Mark ${task.title} as ${
+                        task.completed ? 'pending' : 'completed'
+                      }`}
+                    />
+
+                    <div className="task-details">
+                      <span
+                        className={
+                          task.completed
+                            ? 'task-title completed'
+                            : 'task-title'
+                        }
+                      >
+                        {task.title}
+                      </span>
+
+                      <div className="task-meta">
+                        <span
+                          className={`priority ${task.priority.toLowerCase()}`}
+                        >
+                          {task.priority} priority
+                        </span>
+
+                        {task.deadline && (
+                          <span className="deadline">
+                            📅 {task.deadline}
+                          </span>
+                        )}
+
+                        {task.completed && (
+                          <span className="done-label">
+                            ✓ Completed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="task-actions">
+                      <button
+                        className="edit-button"
+                        onClick={() => editTask(task)}
+                        type="button"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="delete-button"
+                        onClick={() => deleteTask(task.id)}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </section>
+
+            {/* Footer */}
+
+            <footer className="footer">
+              <span>
+                {pendingCount} task(s) remaining
+              </span>
+
+              <button
+                className="clear-button"
+                onClick={clearCompleted}
+                type="button"
+                disabled={completedCount === 0}
+              >
+                Clear Completed
+              </button>
+            </footer>
+          </section>
+        </div>
       </div>
     </main>
   )
